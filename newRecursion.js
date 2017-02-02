@@ -79,15 +79,21 @@ function moveTo(){
 }
 
 function findParent(fs) {       //looking for me, current, and then i know my father
+    var result = undefined;
     for (var i = 0; i < fs.children.length; i++) {
         if (fs.children[i] == currentFolder) {
                 return fs;
+        } else {
+            if ((fs.children) && fs.children[i].type == 'folder'){
+                result = findParent(fs.children[i]);
+                if (result !== undefined){
+                    return result;
+                }
+            }
         }
     }
 
-        if ((fs.children) && fs.children[i].type == 'folder'){
-             currentFolder = findParent(fs.children, currentFolder);
-        }
+
 
 }
 
