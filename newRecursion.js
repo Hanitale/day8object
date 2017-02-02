@@ -41,15 +41,15 @@ function readMenu() {
             break;
         }
 }
-function showFileSystem(x){
-    console.log(x.name+'/');
+function showFileSystem(currentFolder){
+    console.log(currentFolder.name+'/');
     var i;
-    if (x.children && x.children.length> 0 ){
-        for (i=0;i<x.children.length;i++){
-            if(x.children[i].type == 'folder') {
-                console.log('\t' + x.children[i].name +'/');
+    if (currentFolder.children && currentFolder.children.length> 0 ){
+        for (i=0;i<currentFolder.children.length;i++){
+            if(currentFolder.children[i].type == 'folder') {
+                console.log('\t' + currentFolder.children[i].name +'/');
             } else {
-                console.log('\t#' + x.children[i].name);
+                console.log('\t#' + currentFolder.children[i].name);
             }
         }
     }
@@ -61,7 +61,7 @@ function showFileSystem(x){
     // }
 }
 
-function moveTo(x){
+function moveTo(){
     var answer = readlineSync.question('Enter name of Folder to go to?\n');
     if (answer == '..') {
         if(currentFolder == fileSystem){
@@ -78,24 +78,24 @@ function moveTo(x){
     showFileSystem(currentFolder)
 }
 
-function findParent(x,y) {       //looking for me, current, and then i know my father
-    for (var i = 0; i < x.children.length; i++) {
-        if (x.children[i] == y) {
-                return x;
+function findParent(fs) {       //looking for me, current, and then i know my father
+    for (var i = 0; i < fs.children.length; i++) {
+        if (fs.children[i] == currentFolder) {
+                return fs;
         }
     }
 
-        if ((x.children) && x.children[i].type == 'folder'){
-             currentFolder = findParent(x.children, y);
+        if ((fs.children) && fs.children[i].type == 'folder'){
+             currentFolder = findParent(fs.children, currentFolder);
         }
 
 }
 
-function findInChildren(x, y){
-    if (x.children && x.children.length > 0) {
-        for (var i = 0; i < x.children.length; i++) {
-            if (x.children[i].name == y) {
-               currentFolder = x.children[i];
+function findInChildren(fs, itemName){
+    if (fs.children && fs.children.length > 0) {
+        for (var i = 0; i < fs.children.length; i++) {
+            if (fs.children[i].name == itemName) {
+               currentFolder = fs.children[i];
                return i;
             }
         }
@@ -103,18 +103,18 @@ function findInChildren(x, y){
     return false;
 }
 
-function createNew(x){
+function createNew(fs){
     var newItem = readlineSync.question('Enter name of File or Folder to add?\n');
-    var ifExists = findInChildren(x, newItem);
+    var ifExists = findInChildren(fs, newItem);
     if(ifExists == false){
         nextId++;
         var itemContent = readlineSync.question('Enter text if file\n');
         if (itemContent < 1) {
-            x.children.push({type: 'folder', id: nextId, name: newItem, children: []});
+            fs.children.push({type: 'folder', id: nextId, name: newItem, children: []});
         } else {
-            x.children.push({type: 'file', id: nextId, name: newItem, content: itemContent});
+            fs.children.push({type: 'file', id: nextId, name: newItem, content: itemContent});
         }
-        showFileSystem(x);
+        showFileSystem(fs);
         return;
 
     } else {
@@ -123,35 +123,35 @@ function createNew(x){
 }
 
 
-function deleteItem(x){
+function deleteItem(fs){
     var itemToDelete = readlineSync.question('Enter name of item to delete\n');
-    var index = findInChildren(x, itemToDelete);
-    if(index == false){
+    var index = findInChildren(fs, itemToDelete);
+    if(typeof (index) != 'number'){
         console.log('No Such File');
     } else {
         areYouSure = readlineSync.question('Are you sure? y/n\n');
         if (areYouSure == 'n') {
             console.log('action cancelled');
         } else {
-            x.children.splice(index, 1);                //deletes the item in index location
-            // for (u = currentFolder.index; u < (fsStorage.length); u++) {     //updates array to avoid hole
-            //     fsStorage[u][0] = u;
-            //     if (fsStorage[u][1] != 0) {
-            //         fsStorage[u][1] = (fsStorage[u][1]) - 1;
+            fs.children.splice(index, 1);                //deletes the item in index location
+            // for (u = currentFolder.index; u < (fs.length); u++) {     //updates array to avoid hole
+            //     fs[u][0] = u;
+            //     if (fs[u][1] != 0) {
+            //         fs[u][1] = (fs[u][1]) - 1;
             //     }
             // }
         }
         console.log(itemToDelete, "has been deleted");
-        currentFolder = x;
+        currentFolder = fs;
         showFileSystem(currentFolder);
     }
 }
 
-function openFile(x) {
+function openFile(fs) {
     var fileName = readlineSync.question('Enter name of File to open\n');
-    var index = findInChildren(x, fileName);
+    var index = findInChildren(fs, fileName);
     if(typeof (index)== 'number') {
-        console.log(x.children[index].content);
+        console.log(fs.children[index].content);
     } else {
         console.log('No Such File');
     }
