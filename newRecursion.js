@@ -1,13 +1,18 @@
-var readlineSync = require('readline-sync');
+var readlineSync = require('readline-sync');   //to be able to interact with user
+var readMe = require('read-text-file');     // to be able to read from outer text file
+var textFile = './text.txt'
+var fileContents = readMe.readSync(textFile);
+var fs = [JSON.parse(fileContents)];
 var menu = [
     'Show current folder',
     'Go to another folder and show contents',//move to another folder
     'Create file or folder',
     'Delete file or folder',
     'Open file',
-    'Quit program'
+    'Quit program',
+    'Save File System to file'
 ];
-var fs = [{
+var alternativeFs = [{
     type: 'folder', id: 0, name: 'root', children: [{
         type: 'folder', id: 1, name: 'sub1', children: [{type: 'file', id: 4, name: 'file1.txt'}]
     },
@@ -15,9 +20,9 @@ var fs = [{
         {type: 'file', id: 3, name: 'file1.txt', content: '"Not much to say"'}
     ]
 }];
-var fileSystem = fs[0];
+var fileSystem = fs[0] || alternativeFs[0];
 var currentFolder = fileSystem;
-var nextId = 5;
+var nextId = 5;            //think of way to update this in the text file
 function readMenu() {
     var answer = readlineSync.keyInSelect(menu, 'choose from menu\n');
     switch (answer) {
@@ -38,6 +43,9 @@ function readMenu() {
             break;
         case 5:
             quitProgram();
+            break;
+        case 6:
+            saveToTextFile(fileSystem);
             break;
         }
 }
@@ -60,7 +68,6 @@ function showFileSystem(currentFolder){
     //     }
     // }
 }
-
 function moveTo(){
     var answer = readlineSync.question('Enter name of Folder to go to?\n');
     if (answer == '..') {
@@ -77,7 +84,6 @@ function moveTo(){
     }
     showFileSystem(currentFolder)
 }
-
 function findParent(fs) {       //looking for me, current, and then i know my father
     var result = undefined;
     for (var i = 0; i < fs.children.length; i++) {
@@ -96,7 +102,6 @@ function findParent(fs) {       //looking for me, current, and then i know my fa
 
 
 }
-
 function findInChildren(fs, itemName){
     if (fs.children && fs.children.length > 0) {
         for (var i = 0; i < fs.children.length; i++) {
@@ -108,7 +113,6 @@ function findInChildren(fs, itemName){
     }
     return false;
 }
-
 function createNew(fs){
     var newItem = readlineSync.question('Enter name of File or Folder to add?\n');
     var ifExists = findInChildren(fs, newItem);
@@ -127,46 +131,49 @@ function createNew(fs){
         console.log('Sorry this name is taken');
       }
 }
-
-
-function deleteItem(fs){
+function deleteItem(fs) {
     var itemToDelete = readlineSync.question('Enter name of item to delete\n');
     var index = findInChildren(fs, itemToDelete);
-    if(typeof (index) != 'number'){
-        console.log('No Such File');
+    if (typeof (index) != 'number') {
+        console.log('No Such File or Folder');
     } else {
         areYouSure = readlineSync.question('Are you sure? y/n\n');
-        if (areYouSure == 'n') {
+        if (areYouSure == 'n' || areYouSure == '') {
             console.log('action cancelled');
+        } else if (areYouSure == 'y') {
+            fs.children.splice(index, 1);
+            console.log(itemToDelete, "has been deleted");
         } else {
-            fs.children.splice(index, 1);                //deletes the item in index location
-            // for (u = currentFolder.index; u < (fs.length); u++) {     //updates array to avoid hole
-            //     fs[u][0] = u;
-            //     if (fs[u][1] != 0) {
-            //         fs[u][1] = (fs[u][1]) - 1;
-            //     }
-            // }
+            console.log('action cancelled');
         }
-        console.log(itemToDelete, "has been deleted");
-        currentFolder = fs;
-        showFileSystem(currentFolder);
     }
+    currentFolder = fs;
+    showFileSystem(currentFolder);
 }
-
 function openFile(fs) {
     var fileName = readlineSync.question('Enter name of File to open\n');
     var index = findInChildren(fs, fileName);
     if(typeof (index)== 'number') {
+        contents = fs.children[index].content
         console.log(fs.children[index].content);
+        var fileContent = readlineSync.question('add text here...(press enter to save).\n');
+        fs.children[index].content = contents + '\n'+fileContent;
+        currentFolder = fs;
+        showFileSystem(currentFolder);
     } else {
         console.log('No Such File');
+      }
     }
-}
-
 function quitProgram() {
     process.exit(0);
 }
-
+function saveToTextFile(fs){
+    var fs = require('fs');
+    var file = './text.txt'
+    var content = JSON.stringify(fileSystem);
+    fs.writeFileSync(file, content, 'utf8');
+    console.log('FileSystem saved Successfully to JSON text.txt');
+}
 
 while (true) {
     //showFolder(currentId);
